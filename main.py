@@ -5,13 +5,14 @@ import string
 from tracemalloc import start
 from bs4 import BeautifulSoup as bs
 import requests
+import requests_cache
 import re
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+requests_cache.install_cache('test_cache')
 
-
-recipes = {}
+recipes = []
 
 
 # need to keep track of unit mapping, maybe use pint: https://pint.readthedocs.io/en/stable/
@@ -23,11 +24,20 @@ units['kg'] = 1000
 class Nutrition:
 	"""Class for keeping track of nutrition info"""
 
-
+@dataclass
 class Ingredient:
 	"""Class for keeping track of an ingredient"""
-	name: str
 	amount: float = 0
+	unit: str = None
+	name: str = None
+	notes: str = None
+
+	def __str__(self):
+		temp = []
+		for attr, value in self.__dict__.items():
+			if value is not None:
+				temp.append(str(value))
+		return ' '.join(temp)
 
 
 class RecipeStep:
@@ -36,23 +46,23 @@ class RecipeStep:
 	time: float #min
 
 
-
+@dataclass
 class Recipe:
 	"""Class for keeping track of a recipe"""
-	name: str
-	description: str
-	ingredients: list[Ingredient] = []
-	servings: float
-	servingsUnit: str
-	author: str
-	prepTime: float #minutes
-	cookTime: float #minutes
-	freezerFriendly: bool
-	storageTimeLimit: float #days
-	steps: list[RecipeStep] = []
-	notes: str
-	source: str
-	tags: list[str] = []
+	name: str = None
+	description: str = None
+	ingredients: list[Ingredient] = field(default_factory=list)
+	servings: float = None
+	servingsUnit: str = None
+	author: str = None
+	prepTime: float = None #minutes
+	cookTime: float = None #minutes
+	freezerFriendly: bool = False
+	storageTimeLimit: float  = None#days
+	steps: list[RecipeStep] = field(default_factory=list)
+	notes: str = None
+	source: str = None
+	tags: list[str] = field(default_factory=list)
 
 def printRecipe(recipe, depth='summary'):
 	"""
@@ -68,6 +78,9 @@ def printRecipe(recipe, depth='summary'):
 	else:
 		for attr, value in recipe.__dict__.items():
 			print(attr, value)
+		if ingredients is not None and ingredients is not []:
+			for i in ingredients:
+				print(i)
 
 
 # start with scraping a recipe and testing stuff out a bit, vegan minimalist baker of course
@@ -96,18 +109,31 @@ testIngredientData = Ingredient()
 testRecipeStep = RecipeStep()
 testRecipeData = Recipe()
 #wprm-recipe-container-97936 > div > div.wprm-recipe-header-container > div.wprm-recipe-header-left > h2
-recipeDiv = soupRecipe.find('div', class_='wprm-recipe')
-testRecipeData.name = recipeDiv.select_one('.wprm-recipe-name').text
-testRecipeData.description = recipeDiv.select_one('.wprm-recipe-summary').text
-testRecipeData.author = recipeDiv.select_one('.wprm-recipe-author').text
-testRecipeData.prepTime = recipeDiv.select_one('.wprm-recipe-prep_time').text
-testRecipeData.cookTime = recipeDiv.select_one('.wprm-recipe-cook_time').text
-testRecipeData.servings = recipeDiv.select_one('.wprm-recipe-servings').text
-testRecipeData.servingsUnit = recipeDiv.select_one('.wprm-recipe-servings-unit').text
-testRecipeData.tags += [_.strip() for _ in recipeDiv.select_one('.wprm-recipe-course').text.split(',')]
-testRecipeData.tags += [_.strip() for _ in recipeDiv.select_one('.wprm-recipe-cuisine').text.split(',')]
-testRecipeData.freezerFriendly = recipeDiv.select_one('.wprm-recipe-freezer-friendly').text
-testRecipeData.storageTimeLimit = recipeDiv.select_one('.wprm-recipe-does-it-keep').text
+recipeSoup = soupRecipe.find('div', class_='wprm-recipe')
+testRecipeData.name = recipeSoup.select_one('.wprm-recipe-name').text
+testRecipeData.description = recipeSoup.select_one('.wprm-recipe-summary').text
+testRecipeData.author = recipeSoup.select_one('.wprm-recipe-author').text
+testRecipeData.prepTime = recipeSoup.select_one('.wprm-recipe-prep_time').text
+testRecipeData.cookTime = recipeSoup.select_one('.wprm-recipe-cook_time').text
+testRecipeData.servings = recipeSoup.select_one('.wprm-recipe-servings').text
+testRecipeData.servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit').text
+testRecipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-course').text.split(',')]
+testRecipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-cuisine').text.split(',')]
+testRecipeData.freezerFriendly = recipeSoup.select_one('.wprm-recipe-freezer-friendly').text
+testRecipeData.storageTimeLimit = recipeSoup.select_one('.wprm-recipe-does-it-keep').text
 
+# get ingredients
+ingredients = []
+ingredientSoup = recipeSoup.find('ul', class_='wprm-recipe-ingredients')
+for ingredientItem in ingredientSoup.find_all('li', class_='wprm-recipe-ingredient'):
+	amount = ingredientItem.find('span', class_='wprm-recipe-ingredient-amount').text
+	unit = ingredientItem.find('span', class_='wprm-recipe-ingredient-unit').text
+	name = ingredientItem.find('span', class_='wprm-recipe-ingredient-name').text
+	notes = ingredientItem.find('span', class_='wprm-recipe-ingredient-notes')
+	if notes is not None:
+		notes = notes.text
+	ingredients.append(Ingredient(name, amount, unit, notes))
+
+testRecipeData.ingredients = ingredients
 printRecipe(testRecipeData, depth='all')
 # print(soup.prettify())
