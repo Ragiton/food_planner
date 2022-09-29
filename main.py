@@ -77,10 +77,12 @@ def printRecipe(recipe, depth='summary'):
 		print(recipe.ingredients)
 	else:
 		for attr, value in recipe.__dict__.items():
-			print(attr, value)
+			if attr not in ['ingredients']:
+				print(attr,':', value)
+		print('Ingredients:')
 		if ingredients is not None and ingredients is not []:
 			for i in ingredients:
-				print(i)
+				print('\t', i)
 
 
 # start with scraping a recipe and testing stuff out a bit, vegan minimalist baker of course
@@ -124,7 +126,7 @@ testRecipeData.storageTimeLimit = recipeSoup.select_one('.wprm-recipe-does-it-ke
 
 # get ingredients
 ingredients = []
-ingredientSoup = recipeSoup.find('ul', class_='wprm-recipe-ingredients')
+ingredientSoup = recipeSoup.find('div', class_='wprm-recipe-ingredient-group')
 for ingredientItem in ingredientSoup.find_all('li', class_='wprm-recipe-ingredient'):
 	amount = ingredientItem.find('span', class_='wprm-recipe-ingredient-amount').text
 	unit = ingredientItem.find('span', class_='wprm-recipe-ingredient-unit').text
