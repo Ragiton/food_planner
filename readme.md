@@ -17,4 +17,10 @@
 
 1. start with scraping recipes to get some data to start with
 2. design a data format to store recipe info
-3. 
+
+
+## Legal concerns
+
+- need to keep track of acceptable use for each site
+- can only use recepies that allow the ingredient info to be shared
+  - minimalistbaker.com allows this for example
