@@ -5,6 +5,9 @@ import requests_cache
 import re
 import sitemaps
 
+import random
+import sleep
+
 from dataclasses import dataclass, field
 
 requests_cache.install_cache('test_cache')
@@ -88,20 +91,36 @@ def getRecipeFromPage(recipeUrl):
 	"""
 	recipePage = requests.get(recipeUrl)
 	recipeSoup = bs(recipePage.text, 'html.parser').find('div', class_='wprm-recipe')
+	if recipeSoup is None:
+		return None
 
 	testIngredientData = Ingredient()
 	recipeData = Recipe()
 	recipeData.sourceLink = recipeUrl
-
-	recipeData.printLink = printTag = recipeSoup.find('a', class_='wprm-recipe-print', href=True)['href']
+	
+	printTag = recipeSoup.find('a', class_='wprm-recipe-print', href=True)
+	if printTag is None:
+		return None
+	recipeData.printLink = printTag['href']
 	#wprm-recipe-container-97936 > div > div.wprm-recipe-header-container > div.wprm-recipe-header-left > h2
 	recipeData.name = recipeSoup.select_one('.wprm-recipe-name').text
 	recipeData.description = recipeSoup.select_one('.wprm-recipe-summary').text
 	recipeData.author = recipeSoup.select_one('.wprm-recipe-author').text
-	recipeData.prepTime = recipeSoup.select_one('.wprm-recipe-prep_time').text
-	recipeData.cookTime = recipeSoup.select_one('.wprm-recipe-cook_time').text
+
+	prepTimeTag = recipeSoup.select_one('.wprm-recipe-prep_time')
+	if prepTimeTag is not None:
+		recipeData.prepTime = prepTimeTag.text
+	else:
+		recipeData.prepTime = '0'
+	
+	cookTimeTag = recipeSoup.select_one('.wprm-recipe-cook_time')
+	if cookTimeTag is not None:
+		recipeData.cookTime = cookTimeTag.text
+	else:
+		recipeData.cookTime = '0'
+	
 	recipeData.servings = recipeSoup.select_one('.wprm-recipe-servings').text
-	recipeData.servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit').text
+	recipeData.servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit').text.replace('(', '').replace(')', '')
 	recipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-course').text.split(',')]
 	recipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-cuisine').text.split(',')]
 	recipeData.freezerFriendly = recipeSoup.select_one('.wprm-recipe-freezer-friendly').text
@@ -112,8 +131,16 @@ def getRecipeFromPage(recipeUrl):
 	ingredients = []
 	ingredientSoup = recipeSoup.find('div', class_='wprm-recipe-ingredient-group')
 	for ingredientItem in ingredientSoup.find_all('li', class_='wprm-recipe-ingredient'):
-		amount = ingredientItem.find('span', class_='wprm-recipe-ingredient-amount').text
-		unit = ingredientItem.find('span', class_='wprm-recipe-ingredient-unit').text
+		amount = ingredientItem.find('span', class_='wprm-recipe-ingredient-amount')
+		if amount is not None:
+			amount = amount.text
+		else:
+			amount = 'N/A'
+		unit = ingredientItem.find('span', class_='wprm-recipe-ingredient-unit')
+		if unit is not None:
+			unit = unit.text
+		else:
+			unit = 'N/A'
 		name = ingredientItem.find('span', class_='wprm-recipe-ingredient-name').text
 		notes = ingredientItem.find('span', class_='wprm-recipe-ingredient-notes')
 		if notes is not None:
@@ -141,11 +168,24 @@ def scrapeRecipeLinks():
 	articleLinks = []
 	for article in articles:
 		link = article.a.get('href')
-		print(link)
+		# print(link)
 		articleLinks.append(link)
 	
 	return articleLinks
 
-articleLinks = scrapeRecipeLinks()
 
-getRecipeFromPage(articleLinks[0])
+
+if __name__ == '__main__':
+	articleLinks = scrapeRecipeLinks()
+
+	mbLinks = sitemaps.get_recipe_link_list('https://minimalistbaker.com/')
+	ncLiinks = sitemaps.get_recipe_link_list('https://www.noracooks.com/')
+
+	for link in articleLinks:
+		print('getting recipe from: ', link)
+		recipe = getRecipeFromPage(link)
+		if recipe is not None:
+			recipes.append(recipe)
+		print()
+
+	print(len(recipes))
