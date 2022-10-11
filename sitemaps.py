@@ -55,8 +55,8 @@ def get_child_sitemaps(xml):
 	return output
 
 
-def sitemap_to_dataframe(xml, name=None, data=None, verbose=False):
-
+def sitemap_to_dataframe(xml, name='', data=None, verbose=False, baseurl=''):
+	name = name.replace(baseurl, '')
 	urls = xml.find_all('url')
 
 	linksList = []
@@ -88,7 +88,9 @@ def get_recipe_link_list(baseurl):
 	# print(child_sitemaps)
 
 	recipeLinkLists = []
-	for sitemap in child_sitemaps[:2]:
+	for sitemap in child_sitemaps:
+		if not 'post' in sitemap or 'tag' in sitemap:
+			continue
 
 		child_xml = get_sitemap(sitemap)
 		# print(child_xml)
@@ -96,7 +98,7 @@ def get_recipe_link_list(baseurl):
 		# result = child_xml.prettify().splitlines()
 		# print('\n'.join(result[:100]))
 
-		df = sitemap_to_dataframe(child_xml, name=sitemap.replace(baseurl, ''))
+		df = sitemap_to_dataframe(child_xml, name=sitemap, baseurl=baseurl)
 		# print(df)
 		recipeLinkLists.append(df)
 	totalDF = pd.concat(recipeLinkLists).reset_index(drop=True)
