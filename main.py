@@ -1,4 +1,5 @@
 
+from datetime import datetime
 from bs4 import BeautifulSoup as bs
 import requests
 import requests_cache
@@ -6,7 +7,7 @@ import re
 import sitemaps
 
 import random
-import sleep
+import time
 
 from dataclasses import dataclass, field
 
@@ -175,17 +176,38 @@ def scrapeRecipeLinks():
 
 
 
+
+
 if __name__ == '__main__':
-	articleLinks = scrapeRecipeLinks()
+	# articleLinks = scrapeRecipeLinks()
 
-	mbLinks = sitemaps.get_recipe_link_list('https://minimalistbaker.com/')
-	ncLiinks = sitemaps.get_recipe_link_list('https://www.noracooks.com/')
+	# store list of recipe links in set
 
-	for link in articleLinks:
-		print('getting recipe from: ', link)
-		recipe = getRecipeFromPage(link)
-		if recipe is not None:
-			recipes.append(recipe)
-		print()
+	# if link is not recipe, mark it or remove it from set?
+	websites = ['https://minimalistbaker.com/', 'https://www.noracooks.com/']
+	siteLinks = {}
 
-	print(len(recipes))
+	# get initial set of links
+	for site in websites:
+		siteLinks[site] = sitemaps.get_recipe_link_set(site)
+
+	# check for any link updates
+	for site in websites:
+		links = sitemaps.get_recipe_link_set(site)
+		existingLinks = siteLinks[site]
+		newLinks = links.difference(existingLinks)
+		updateLinks = links.difference(newLinks)
+		for link in updateLinks:
+			if link.lastModified > existingLinks
+			
+	# mbLinks = sitemaps.get_recipe_link_list('https://minimalistbaker.com/')
+	# ncLiinks = sitemaps.get_recipe_link_list('https://www.noracooks.com/')
+
+	# for link in articleLinks:
+	# 	print('getting recipe from: ', link)
+	# 	recipe = getRecipeFromPage(link)
+	# 	if recipe is not None:
+	# 		recipes.append(recipe)
+	# 	print()
+
+	# print(len(recipes))
