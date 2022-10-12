@@ -9,9 +9,24 @@ import sitemaps
 import random
 import time
 
+import pickle
+
 from dataclasses import dataclass, field
 
 requests_cache.install_cache('test_cache')
+
+
+def make_throttle_hook(timeoutMin=1.0, timeoutMax=5.0):
+	"""Make a request hook function that adds a custom delay for non-cached requests"""
+
+	multiplier = timeoutMax-timeoutMin
+
+	def hook(response, *args, **kwargs):
+		if not getattr(response, 'from_cache', False):
+			print('sleeping')
+			time.sleep(random.random()*multiplier+timeoutMin)
+		return response
+	return hook
 
 recipes = []
 
@@ -90,15 +105,16 @@ def getRecipeFromPage(recipeUrl):
 	"""
 	Get recipe info from WPRM (word press recipe maker) site
 	"""
-	recipePage = requests.get(recipeUrl)
+	recipePage = requests.get(recipeUrl, hooks={'response': make_throttle_hook()})
 	recipeSoup = bs(recipePage.text, 'html.parser').find('div', class_='wprm-recipe')
 	if recipeSoup is None:
 		return None
-
+	
 	testIngredientData = Ingredient()
 	recipeData = Recipe()
 	recipeData.sourceLink = recipeUrl
 	
+	#check if this page actually contains recipe data, do this by seeing if there is a link to print the recipe
 	printTag = recipeSoup.find('a', class_='wprm-recipe-print', href=True)
 	if printTag is None:
 		return None
