@@ -112,17 +112,21 @@ def getRecipeFromPage(recipeUrl):
 	if prepTimeTag is not None:
 		recipeData.prepTime = prepTimeTag.text
 	else:
-		recipeData.prepTime = '0'
+		recipeData.prepTime = 0
 	
 	cookTimeTag = recipeSoup.select_one('.wprm-recipe-cook_time')
 	if cookTimeTag is not None:
 		recipeData.cookTime = cookTimeTag.text
 	else:
-		recipeData.cookTime = '0'
+		recipeData.cookTime = 0
 	
 	recipeData.servings = recipeSoup.select_one('.wprm-recipe-servings').text
-	recipeData.servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit').text.replace('(', '').replace(')', '')
-	recipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-course').text.split(',')]
+	servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit')
+	if servingsUnit is not None:
+		recipeData.servingsUnit = servingsUnit.text.replace('(', '').replace(')', '')
+	course = recipeSoup.select_one('.wprm-recipe-course')
+	if course is not None:
+		recipeData.tags += [_.strip() for _ in course.text.split(',')]
 	recipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-cuisine').text.split(',')]
 	recipeData.freezerFriendly = recipeSoup.select_one('.wprm-recipe-freezer-friendly').text
 	recipeData.storageTimeLimit = recipeSoup.select_one('.wprm-recipe-does-it-keep').text
@@ -149,7 +153,7 @@ def getRecipeFromPage(recipeUrl):
 		ingredients.append(Ingredient(name, amount, unit, notes))
 
 	recipeData.ingredients = ingredients
-	printRecipe(recipeData, depth='all')
+	# printRecipe(recipeData, depth='all')
 	return recipeData
 
 # start with scraping a recipe and testing stuff out a bit, vegan minimalist baker of course
@@ -175,7 +179,17 @@ def scrapeRecipeLinks():
 	return articleLinks
 
 
-
+def updateLinks(existingSiteLinks, websites):
+	# check for any link updates
+	for site in websites:
+		links = sitemaps.get_recipe_link_dict(site)
+		existingLinks = existingSiteLinks[site]
+		newLinks = {k:links[k] for k in links.keys() if k not in existingLinks}
+		# save link to new dict if new link data is greater than old link date (smaller date preceeds larger date)
+		updateLinks = {k:links[k] for k in links.keys() if links[k][1]>existingLinks[k][1]} 
+		for link, value in updateLinks:
+			existingLinks[link] = value
+		existingLinks.update(newLinks)
 
 
 if __name__ == '__main__':
@@ -189,16 +203,31 @@ if __name__ == '__main__':
 
 	# get initial set of links
 	for site in websites:
-		siteLinks[site] = sitemaps.get_recipe_link_set(site)
+		siteLinks[site] = sitemaps.get_recipe_link_dict(site)
 
-	# check for any link updates
-	for site in websites:
-		links = sitemaps.get_recipe_link_set(site)
-		existingLinks = siteLinks[site]
-		newLinks = links.difference(existingLinks)
-		updateLinks = links.difference(newLinks)
-		for link in updateLinks:
-			if link.lastModified > existingLinks
+
+	recipes = []
+	recipeCount = 0
+	linkCount = 0
+	# go through all links and get recipe data
+	for website, childLinks in siteLinks.items():
+		for pageLink, data in childLinks.items():
+			print('getting recipe', recipeCount, 'from link ', linkCount, ':', pageLink)
+			linkCount += 1
+			# time.sleep(random.random()*4+1) # wait random ammount of time between 1 and 5 seconds
+			recipe = getRecipeFromPage(website+pageLink)
+			if recipe is not None:
+				data[0] = True #recipe is valid
+				recipes.append(recipe)
+				recipeCount += 1
+			else:
+				data[0] = False #recipe is not valid
+	
+	print('Links processed:', linkCount, ' Recipes processed:', recipeCount)
+	# store recipes to file
+
+	with open('recipes.pkl','wb') as f:
+		pickle.dump(recipes, f)
 			
 	# mbLinks = sitemaps.get_recipe_link_list('https://minimalistbaker.com/')
 	# ncLiinks = sitemaps.get_recipe_link_list('https://www.noracooks.com/')
