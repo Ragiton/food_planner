@@ -99,10 +99,10 @@ def sitemap_to_dataframe(xml, name='', data=None, verbose=False, baseurl=''):
 	df = pd.DataFrame(linksList, columns=['loc', 'lastMod', 'sitemap'])
 	return df
 
-def sitemap_to_set(xml, baseurl=''):
+def sitemap_to_dict(xml, baseurl=''):
 	urls = xml.find_all('url')
 
-	linkSet = set()
+	linkDict = {}
 
 	for url in urls:
 		locResult = url.findNext("loc")
@@ -113,14 +113,14 @@ def sitemap_to_set(xml, baseurl=''):
 		
 		lastModResult = url.findNext('lastmod')
 		if lastModResult is not None:
-			lastMod = lastModResult.text
+			lastMod = datetime.fromisoformat(lastModResult.text)
 		else:
 			lastMod = ''
 
 		if loc != '':
-			linkSet.add(RecipeLink(link=loc, lastModified=lastMod))
+			linkDict[loc] = [False, lastMod]
 
-	return linkSet
+	return linkDict
 
 def get_recipe_link_list(baseurl):
 	xml = get_sitemap(get_sitemap_url(baseurl))
@@ -148,34 +148,35 @@ def get_recipe_link_list(baseurl):
 
 	return totalDF['loc'].to_list()
 
-def get_recipe_link_set(baseurl):
+def get_recipe_link_dict(baseurl):
 	xml = get_sitemap(get_sitemap_url(baseurl))
 
 	child_sitemaps = get_child_sitemaps(xml)
-	print(child_sitemaps)
+	# print(child_sitemaps)
 
-	recipeLinkSet = set()
+	recipeLinkDict = {}
 	for sitemap in child_sitemaps:
 		if not 'post' in sitemap or 'tag' in sitemap:
 			continue
-
+		print(sitemap)
 		child_xml = get_sitemap(sitemap)
 		# print(child_xml)
 		# print part of child xml results (first 100 lines)
 		# result = child_xml.prettify().splitlines()
 		# print('\n'.join(result[:100]))
 
-		links = sitemap_to_set(child_xml, baseurl=baseurl)
-		print(links)
-		recipeLinkSet = recipeLinkSet.union(links)
-	print(recipeLinkSet)
-	return recipeLinkSet
+		links = sitemap_to_dict(child_xml, baseurl=baseurl)
+		# print(links)
+		recipeLinkDict.update(links) # add links to recipeLinkDict
+	# print(recipeLinkDict)
+	return recipeLinkDict
 
 if __name__ == '__main__':
 	baseurl = 'https://minimalistbaker.com/'
 	baseurl = 'https://www.noracooks.com/'
 	results = get_recipe_link_list(baseurl)
-	setResults = get_recipe_link_set(baseurl)
-	print('list:', len(results), 'set:', len(setResults))
-	print('list:', results[:10], 'set:', setResults.pop())
+	dictResults = get_recipe_link_dict(baseurl)
+	print('list:', len(results), 'set:', len(dictResults))
+	
+	print('list:', results[:10], 'set:', list(dictResults.items())[:10] )
 	
