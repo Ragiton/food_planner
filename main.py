@@ -119,34 +119,42 @@ def getRecipeFromPage(recipeUrl):
 	if printTag is None:
 		return None
 	recipeData.printLink = printTag['href']
-	#wprm-recipe-container-97936 > div > div.wprm-recipe-header-container > div.wprm-recipe-header-left > h2
-	recipeData.name = recipeSoup.select_one('.wprm-recipe-name').text
-	recipeData.description = recipeSoup.select_one('.wprm-recipe-summary').text
-	recipeData.author = recipeSoup.select_one('.wprm-recipe-author').text
 
-	prepTimeTag = recipeSoup.select_one('.wprm-recipe-prep_time')
-	if prepTimeTag is not None:
-		recipeData.prepTime = prepTimeTag.text
-	else:
-		recipeData.prepTime = 0
+	# create mapping between css selector and data it should populate if found
+	recipeSelectorMap = {
+		'.wprm-recipe-name': recipeData.name,
+		'.wprm-recipe-summary': recipeData.description,
+		'.wprm-recipe-author': recipeData.author,
+		'.wprm-recipe-prep_time': recipeData.prepTime,
+		'.wprm-recipe-cook_time': recipeData.cookTime,
+		'.wprm-recipe-servings': recipeData.servings,
+		'.wprm-recipe-servings-unit': recipeData.servingsUnit,
+		'.wprm-recipe-freezer-friendly': recipeData.freezerFriendly,
+		'.wprm-recipe-does-it-keep': recipeData.storageTimeLimit,
+		'.wprm-recipe-notes': recipeData.notes
+		}
+
+	# get all data matching each selector and put it into corresponding variable if it is found
+	for selector, var in recipeSelectorMap.items():
+		tempData = recipeSoup.select_one(selector)
+		if tempData is not None:
+			var = tempData.text
 	
-	cookTimeTag = recipeSoup.select_one('.wprm-recipe-cook_time')
-	if cookTimeTag is not None:
-		recipeData.cookTime = cookTimeTag.text
-	else:
-		recipeData.cookTime = 0
-	
-	recipeData.servings = recipeSoup.select_one('.wprm-recipe-servings').text
+	# wprm-recipe-container-97936 > div > div.wprm-recipe-header-container > div.wprm-recipe-header-left > h2
+
 	servingsUnit = recipeSoup.select_one('.wprm-recipe-servings-unit')
 	if servingsUnit is not None:
 		recipeData.servingsUnit = servingsUnit.text.replace('(', '').replace(')', '')
+	
 	course = recipeSoup.select_one('.wprm-recipe-course')
 	if course is not None:
 		recipeData.tags += [_.strip() for _ in course.text.split(',')]
-	recipeData.tags += [_.strip() for _ in recipeSoup.select_one('.wprm-recipe-cuisine').text.split(',')]
-	recipeData.freezerFriendly = recipeSoup.select_one('.wprm-recipe-freezer-friendly').text
-	recipeData.storageTimeLimit = recipeSoup.select_one('.wprm-recipe-does-it-keep').text
-	recipeData.notes = recipeSoup.select_one('.wprm-recipe-notes').text
+	
+	cuisine = recipeSoup.select_one('.wprm-recipe-cuisine')
+	if cuisine is not None:
+		recipeData.tags += [_.strip() for _ in cuisine.text.split(',')]
+
+
 
 	# get ingredients
 	ingredients = []
