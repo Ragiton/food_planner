@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 requests_cache.install_cache('test_cache')
 
 
-def make_throttle_hook(timeoutMin=1.0, timeoutMax=5.0):
+def make_throttle_hook(timeoutMin=0.3, timeoutMax=2.0):
 	"""Make a request hook function that adds a custom delay for non-cached requests"""
 
 	multiplier = timeoutMax-timeoutMin
@@ -224,11 +224,14 @@ if __name__ == '__main__':
 	# if link is not recipe, mark it or remove it from set?
 	websites = ['https://minimalistbaker.com/', 'https://www.noracooks.com/']
 	siteLinks = {}
+	siteLinkCounts = []
 
 	# get initial set of links
 	for site in websites:
 		siteLinks[site] = sitemaps.get_recipe_link_dict(site)
+		siteLinkCounts.append(len(siteLinks[site]))
 
+	print('foundLinks:', siteLinkCounts)
 
 	recipes = []
 	recipeCount = 0
@@ -252,15 +255,3 @@ if __name__ == '__main__':
 
 	with open('recipes.pkl','wb') as f:
 		pickle.dump(recipes, f)
-			
-	# mbLinks = sitemaps.get_recipe_link_list('https://minimalistbaker.com/')
-	# ncLiinks = sitemaps.get_recipe_link_list('https://www.noracooks.com/')
-
-	# for link in articleLinks:
-	# 	print('getting recipe from: ', link)
-	# 	recipe = getRecipeFromPage(link)
-	# 	if recipe is not None:
-	# 		recipes.append(recipe)
-	# 	print()
-
-	# print(len(recipes))
