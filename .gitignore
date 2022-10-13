@@ -3,4 +3,4 @@
 venv
 *.sqlite
 *.pyc
-test_cache.sqlite
+*.pkl

@@ -106,10 +106,22 @@ def getRecipeFromPage(recipeUrl):
 	Get recipe info from WPRM (word press recipe maker) site
 	"""
 	recipePage = requests.get(recipeUrl, hooks={'response': make_throttle_hook()})
-	recipeSoup = bs(recipePage.text, 'html.parser').find('div', class_='wprm-recipe')
-	if recipeSoup is None:
+	recipeSoupRaw = bs(recipePage.text, 'html.parser').find_all('div', class_='wprm-recipe')
+	if recipeSoupRaw is None:
 		return None
 	
+	#find correct recipe div in page
+	recipeSoup = None # setup variable for recipe
+	for soup in recipeSoupRaw:
+		printTag = soup.find('a', class_='wprm-recipe-print', href=True)
+		if printTag is not None:
+			recipeSoup = soup
+			break
+
+	# if no valid recipe div is found, stop
+	if recipeSoup is None:
+		return None
+
 	testIngredientData = Ingredient()
 	recipeData = Recipe()
 	recipeData.sourceLink = recipeUrl
@@ -222,7 +234,7 @@ if __name__ == '__main__':
 	# store list of recipe links in set
 
 	# if link is not recipe, mark it or remove it from set?
-	websites = ['https://minimalistbaker.com/', 'https://www.noracooks.com/']
+	websites = ['https://www.noracooks.com/', 'https://minimalistbaker.com/']
 	siteLinks = {}
 	siteLinkCounts = []
 
