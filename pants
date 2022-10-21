@@ -10,6 +10,8 @@
 # Learn more here: https://www.pantsbuild.org/docs/installation
 # ====================================================================
 
+ulimit -n 10000
+
 set -eou pipefail
 
 # an arbitrary number: bump when there's a change that someone might want to query for
