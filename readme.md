@@ -29,6 +29,12 @@
 9.  
 
 
+## Tooling
+
+- use pants as build system?
+  - have to use WSL on windows
+- need to pick a unit test framework and start writing tests
+
 ## Legal concerns
 
 - need to keep track of acceptable use for each site
