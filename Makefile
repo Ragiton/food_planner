@@ -1,4 +1,4 @@
-
+SRC_DIR := ./food_planner
 
 all: default
 
@@ -16,6 +16,7 @@ package:
 
 .PHONY: format
 format:
+	./pants fmt $(SRC_DIR)::
 
 .PHONY: complexity
 complexity:
@@ -26,8 +27,8 @@ coverage:
 .PHONY: clean
 clean:
 
-.PHONY: distclean
-distclean:
+.PHONY: clean-build
+clean-build:
 
 ### Help Output ###
 .PHONY : help
