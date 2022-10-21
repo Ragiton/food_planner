@@ -4,12 +4,26 @@ all: default
 
 .PHONY: default
 default:
+	python food_planner/food_planner.py
 
 .PHONY: test
 test:
 
 .PHONY: docs
 docs: 
+
+.PHONY: install-deps
+install-deps: #venv
+	pip install -r requirements.txt
+
+# can't automate virtual environment yet
+# .PHONY: venv
+# venv:
+# 	python3 -m venv venv
+
+# .PHONY: activate
+# activate: venv
+# 	source venv/bin/activate
 
 .PHONY: package
 package:
@@ -29,6 +43,7 @@ clean:
 
 .PHONY: clean-build
 clean-build:
+	rm -rf venv
 
 ### Help Output ###
 .PHONY : help

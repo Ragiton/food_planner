@@ -228,7 +228,7 @@ def updateLinks(existingSiteLinks, websites):
 		existingLinks.update(newLinks)
 
 
-if __name__ == '__main__':
+def testGetAllRecipies():
 	# articleLinks = scrapeRecipeLinks()
 
 	# store list of recipe links in set
@@ -267,3 +267,7 @@ if __name__ == '__main__':
 
 	with open('recipes.pkl','wb') as f:
 		pickle.dump(recipes, f)
+
+
+if __name__ == '__main__':
+	testGetAllRecipies()
