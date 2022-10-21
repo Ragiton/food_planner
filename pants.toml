@@ -1,0 +1,11 @@
+[GLOBAL]
+pants_version = "2.13.0"
+
+backend_packages = [
+  "pants.backend.python",
+  "pants.backend.python.lint.black",
+]
+
+[python]
+# This will become the default in Pants 2.15.
+tailor_pex_binary_targets = false

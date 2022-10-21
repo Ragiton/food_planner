@@ -1,6 +1,11 @@
 
-
+# python
 venv
 *.sqlite
 *.pyc
 *.pkl
+
+# Pants workspace files
+/.pants.*
+/dist/
+/.pids
