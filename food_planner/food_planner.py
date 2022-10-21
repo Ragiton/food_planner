@@ -81,25 +81,25 @@ class Recipe:
 	printLink: str = None
 	tags: list[str] = field(default_factory=list)
 
-def printRecipe(recipe, depth='summary'):
-	"""
-	prints recipe data to the console
-	
-	depth : how much data should be printed
-			'summary' = name, author, prepTime, cookTime
-	"""
-	if(depth=='summary'):
-		print(recipe.name, 'by: ', recipe.author, 'prep: ', recipe.prepTime, 'cook: ', recipe.cookTime)
-	elif(depth=='ingredients'):
-		print(recipe.ingredients)
-	else:
-		for attr, value in recipe.__dict__.items():
-			if attr not in ['ingredients']:
-				print(attr,':', value)
-		print('Ingredients:')
-		if recipe.ingredients is not None and recipe.ingredients is not []:
-			for i in recipe.ingredients:
-				print('\t', i)
+	def printRecipe(self, depth='summary'):
+		"""
+		prints recipe data to the console
+		
+		depth : how much data should be printed
+				'summary' = name, author, prepTime, cookTime
+		"""
+		if(depth=='summary'):
+			print(self.name, 'by: ', self.author, 'prep: ', self.prepTime, 'cook: ', self.cookTime)
+		elif(depth=='ingredients'):
+			print(self.ingredients)
+		else:
+			for attr, value in self.__dict__.items():
+				if attr not in ['ingredients']:
+					print(attr,':', value)
+			print('Ingredients:')
+			if self.ingredients is not None and self.ingredients is not []:
+				for i in self.ingredients:
+					print('\t', i)
 
 def getRecipeFromPage(recipeUrl):
 	"""
@@ -189,7 +189,7 @@ def getRecipeFromPage(recipeUrl):
 		ingredients.append(Ingredient(name, amount, unit, notes))
 
 	recipeData.ingredients = ingredients
-	# printRecipe(recipeData, depth='all')
+	# recipeData.printRecipe(depth='all')
 	return recipeData
 
 # start with scraping a recipe and testing stuff out a bit, vegan minimalist baker of course
