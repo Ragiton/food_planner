@@ -10,7 +10,7 @@
 # Learn more here: https://www.pantsbuild.org/docs/installation
 # ====================================================================
 
-ulimit -n 10000
+ulimit -n 10000  # increase file handler limit based on recommendation here: https://www.pantsbuild.org/docs/troubleshooting#too-many-open-files-error
 
 set -eou pipefail
 
