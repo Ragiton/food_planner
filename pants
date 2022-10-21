@@ -10,7 +10,7 @@
 # Learn more here: https://www.pantsbuild.org/docs/installation
 # ====================================================================
 
-ulimit -n 10000  # increase file handler limit based on recommendation here: https://www.pantsbuild.org/docs/troubleshooting#too-many-open-files-error
+#ulimit -n 10000  # increase file handler limit based on recommendation here: https://www.pantsbuild.org/docs/troubleshooting#too-many-open-files-error
 # above line didn't work in wsl2... trying this instead: https://superuser.com/questions/1200539/cannot-increase-open-file-limit-past-4096-ubuntu/1200818#1200818?s=1b927bb17396480da98a94cbacf8da62
 
 set -eou pipefail
